@@ -45,7 +45,7 @@ function changeImage() {
 
 document.querySelector('#randomImage').addEventListener('click', changeImage);
 
-window.onload('load', function() {
+window.addEventListener("load", function() {
     let imgList = [];
 
     function preload() {
