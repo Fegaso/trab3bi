@@ -44,3 +44,23 @@ function changeImage() {
 }
 
 document.querySelector('#randomImage').addEventListener('click', changeImage);
+
+window.onload('load', function() {
+    let imgList = [];
+
+    function preload() {
+        for(let i = 0; i < arguments.length; i++) {
+            imgList[i] = new Image();
+            imgList[i].src = preload.arguments[i];
+        }
+    }
+
+    preload(
+        'images/superMonkey.jpg',
+        'images/brick.jpg',
+        'images/minecraftYoutubers.jpg',
+        'images/omegalul.jpg',
+        'images/stfu.jpg'
+    );
+});
+
