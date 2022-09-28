@@ -1,0 +1,117 @@
+body {
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgb(32, 32, 32);
+}
+
+#fundo {
+    position: relative;
+    top: 0;
+    left: 0;
+    box-sizing: content-box;
+    text-align: center;
+    overflow: hidden;
+    background-color: rgb(16, 16, 16);
+}
+
+#painel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 1%;
+    opacity: 0.25;
+    float: right;
+}
+
+#painel > button{
+    height: 30%;
+    width: 30%;
+    border-radius: 10%;
+    font-size: 25px;
+    font-weight: 600;
+
+}
+
+#painel > div {
+    display: flex;
+    height: 30%;
+    width: 90%;
+}
+
+#painel > div > button {
+    height: 100%;
+    width: 33.33333333%;
+    border-radius: 10%;
+    font-size: 25px;
+    font-weight: 600;
+}
+
+@media (orientation: landscape){
+    main {
+        justify-content: center;
+    }
+}
+
+@media (orientation: portrait){
+    main {
+        justify-content: start;
+    }
+}
+
+.aloof, .projtil, .alerta, .clone {
+    position:absolute;
+}
+
+#p1 {
+    background-color: aqua;
+}
+
+#enmy {
+    background-color: firebrick;
+}
+
+.projtil {
+    background-color: coral;
+}
+
+.animar {
+    transition: 0.1s;
+}
+
+.animarClone {
+    transition: 0.5s linear;
+}
+
+.desaparece {
+    opacity: 0;
+}
+
+.clone {
+    background-color: rgba(178, 34, 34, 0.5);
+}
+
+/*
+.alerta {
+    border: dashed 1px crimson;
+    background-color: rgba(0, 0, 0, 0);
+    animation: spin 2s linear 0s infinite;
+}
+
+@keyframes spin {
+    from {transform: rotate(0deg);}
+    from {transform: rotate(180deg);}
+    to {transform: rotate(360deg);}
+}
+*/
+
