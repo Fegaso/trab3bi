@@ -29,8 +29,8 @@ if(innerHeight * (16/9) > innerWidth) {
  fundo.style.height = innerHeight  + 'px';
 }
 
-painel.style.width = 0.3 * parseFloat(fundo.style.height) + 'px';
-painel.style.height = 0.3 * parseFloat(fundo.style.height) + 'px';
+painel.style.width = 0.4 * parseFloat(fundo.style.height) + 'px';
+painel.style.height = 0.4 * parseFloat(fundo.style.height) + 'px';
 painel.style.left = parseFloat(fundo.style.width) - parseFloat(painel.style.width) + 'px';
 painel.style.top = parseFloat(fundo.style.height) - parseFloat(painel.style.height) + 'px';
 painel.children[0].style.lineHeight = painel.children[0].style.height;
@@ -67,8 +67,8 @@ window.addEventListener('resize', () => {
  fundo.style.height = innerHeight + 'px';
  }
 
- painel.style.width = 0.3 * parseFloat(fundo.style.height) + 'px';
- painel.style.height = 0.3 * parseFloat(fundo.style.height) + 'px';
+ painel.style.width = 0.4 * parseFloat(fundo.style.height) + 'px';
+ painel.style.height = 0.4 * parseFloat(fundo.style.height) + 'px';
  painel.style.left = parseFloat(fundo.style.width) - parseFloat(painel.style.width) + 'px';
  painel.style.top = parseFloat(fundo.style.height) - parseFloat(painel.style.height) + 'px';
  painel.children[0].style.lineHeight = painel.children[0].style.height;
