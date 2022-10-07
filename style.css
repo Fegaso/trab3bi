@@ -25,22 +25,20 @@ main {
 }
 
 #painel {
+    position: relative;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    margin: 1%;
-    opacity: 0.25;
-    float: right;
+    opacity: 0.15;
+    z-index: 10;
 }
 
 #painel > button{
     height: 30%;
     width: 30%;
     border-radius: 10%;
-    font-size: 25px;
     font-weight: 600;
-
 }
 
 #painel > div {
@@ -53,7 +51,6 @@ main {
     height: 100%;
     width: 33.33333333%;
     border-radius: 10%;
-    font-size: 25px;
     font-weight: 600;
 }
 
@@ -69,27 +66,31 @@ main {
     }
 }
 
-.aloof, .projtil, .alerta, .clone {
+.aloof, .projtil, .alerta, .clone, .rect, .bomb, .weapon, .bigText, .orb {
     position:absolute;
 }
 
 #p1 {
     background-color: aqua;
+    z-index: 2;
 }
 
 #enmy {
-    background-color: firebrick;
+    background-color: rgb(178, 34, 34);
+    z-index: 1;
 }
 
 .projtil {
     background-color: coral;
+    box-shadow: 0px 0px 10px rgb(255, 130, 85);
+    z-index: 3;
 }
 
-.animar {
-    transition: 0.1s;
+.animar1 {
+    transition: 0.1s linear;
 }
 
-.animarClone {
+.animar5 {
     transition: 0.5s linear;
 }
 
@@ -98,20 +99,95 @@ main {
 }
 
 .clone {
-    background-color: rgba(178, 34, 34, 0.5);
+    background-color: rgba(178, 34, 34, 0.25);
+    z-index: 4;
 }
 
-/*
-.alerta {
-    border: dashed 1px crimson;
-    background-color: rgba(0, 0, 0, 0);
-    animation: spin 2s linear 0s infinite;
+.rect {
+    background-color: rgb(178, 34, 34);
+    animation: flash 0.5s linear 0s infinite forwards;
+    z-index: 3;
 }
 
-@keyframes spin {
-    from {transform: rotate(0deg);}
-    from {transform: rotate(180deg);}
-    to {transform: rotate(360deg);}
+@keyframes flash {
+    0% {opacity: 0.05;}
+    50% {opacity: 0.15;}
+    100% {opacity: 0.05;}
 }
-*/
 
+.bomb {
+    background-color: rgb(96, 96, 96);
+    z-index: 3;
+}
+
+.pulsing {
+    animation: pulse 0.5s linear 0s infinite forwards;
+}
+
+@keyframes pulse {
+    0% {
+        background-color: rgb(96, 96, 96);
+    }
+
+    50% {
+        background-color: rgb(122, 18, 0);
+        transform: scale(1.1);
+    }
+
+    100% {
+        background-color: rgb(96, 96, 96);
+    }
+}
+
+.boom {
+    animation: boom 0.3s linear 0s 1 forwards;
+}
+
+@keyframes boom {
+    0% {
+        background-color: rgb(96, 96, 96);
+    }
+
+    100% {
+        background-color: rgb(255, 166, 0);
+        transform: scale(7);
+        opacity: 0.25;
+    }
+}
+
+.weapon {
+    background-color: rgb(255, 133, 133);
+    z-index: 3;
+}
+
+.defeated {
+    animation: dead 0.3s ease-in-out 0s 1 forwards;
+}
+
+@keyframes dead {
+    0% {
+    }
+
+    20% {
+        transform: scale(1.5);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(0);
+        opacity: 0;
+    }
+}
+
+.bigText {
+    text-align: center;
+    font-family: Arial, Helvetica, sans-serif;
+    color: rgb(240, 255, 255, 0.5);
+    z-index: 5;
+}
+
+.orb {
+    background-color: rgb(240, 255, 255, 0.5);
+    box-shadow: 0px 0px 10px rgb(240, 255, 255, 0.5);
+    z-index: 0;
+}
