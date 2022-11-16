@@ -6,6 +6,7 @@ body {
     -webkit-user-select: none; /* Chrome */     
     -moz-user-select: none; /* Firefox */
     -ms-user-select: none; /* Internet Explorer/Edge */
+    
     user-select: none; 
 }
 
@@ -71,55 +72,35 @@ main {
     }
 }
 
-.aloof, .projtil, .alerta, .clone, .rect, .bomb, .weapon, .bigText, .orb {
+.p1, .enmy, .shot, .spreadShot, .alerta, .shadow, .graph, .bomb, .weapon, .bigText, .orb {
     position:absolute;
 }
 
-#p1 {
-    background-color: aqua;
+.p1 {
+    background-color: rgb(0, 255, 255);
     z-index: 2;
 }
 
-#enmy {
+.enmy {
     background-color: rgb(178, 34, 34);
     z-index: 1;
 }
 
-.projtil {
+/* Tiros */
+.shot {
     background-color: coral;
     box-shadow: 0px 0px 10px rgb(255, 130, 85);
     z-index: 3;
 }
 
-.animar1 {
-    transition: 0.1s linear;
-}
-
-.animar5 {
-    transition: 0.5s linear;
-}
-
-.desaparece {
-    opacity: 0;
-}
-
-.clone {
-    background-color: rgba(178, 34, 34, 0.25);
-    z-index: 4;
-}
-
-.rect {
-    background-color: rgb(178, 34, 34);
-    animation: flash 0.5s linear 0s infinite forwards;
+.spreadShot {
+    background-color: rgb(226, 120, 102);
+    box-shadow: 0px 0px 10px rgb(235, 112, 91);
     z-index: 3;
 }
+/**/
 
-@keyframes flash {
-    0% {opacity: 0.05;}
-    50% {opacity: 0.15;}
-    100% {opacity: 0.05;}
-}
-
+/* Bombas */
 .bomb {
     background-color: rgb(96, 96, 96);
     z-index: 3;
@@ -143,21 +124,26 @@ main {
         background-color: rgb(96, 96, 96);
     }
 }
+/**/
 
-.boom {
-    animation: boom 0.3s linear 0s 1 forwards;
+.shadow {
+    background-color: rgba(178, 34, 34);
+    z-index: 4;
 }
 
-@keyframes boom {
-    0% {
-        background-color: rgb(96, 96, 96);
-    }
+.graph {
+    background-color: rgb(178, 34, 34);
+    z-index: 3;
+}
 
-    100% {
-        background-color: rgb(255, 166, 0);
-        transform: scale(7);
-        opacity: 0.25;
-    }
+.flash {
+    animation: flash 0.5s linear 0s infinite;
+}
+
+@keyframes flash {
+    0% {opacity: 0.05;}
+    50% {opacity: 0.15;}
+    100% {opacity: 0.05;}
 }
 
 .weapon {

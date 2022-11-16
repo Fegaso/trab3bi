@@ -5,23 +5,18 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>Jogo</title>
 		<link rel="stylesheet" type="text/css" href="./style.css">
+		<link rel="manifest" href="./manifest.json">
+		<script>
+			if ('serviceWorker' in navigator) {
+			  navigator.serviceWorker.register('./sw.js')
+				 .then(function () {console.log('service worker registered');})
+				 .catch(function () {console.log('service worker failed'); });
+			}
+		  </script>	  
     </head>
 	<body>
 		<main>
 			<div id="fundo">
-				<div id="p1" class="aloof"></div>
-				
-				<div id="enmy" class="aloof"></div>
-
-				<div id="painel">
-					<button type="button" id="acima">^</button>
-					<div>
-						<button type="button" id="esquerda"><</button>
-						<button></button>
-						<button type="button" id="direita">></button>
-					</div>
-					<button type="button" id="baixo">v</button>
-				</div>
 			</div>
 		</main>
 

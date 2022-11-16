@@ -1,891 +1,972 @@
-//Declarando variáveis iniciais do jogo
+let fps = 90;
+
+//Colocando os objetos no jogo
 let fundo = document.querySelector('#fundo');
 
-let painel = document.querySelector('#painel');
+fundo.w;
 
-let p1 = document.querySelector('#p1');
+fundo.h;
 
-let enmy = document.querySelector('#enmy');
+fundo.setSize = function(w_ = this.w, h_ = this.h) {
+    this.w = w_;
+    this.h = h_;
 
-let cima = document.querySelector('#acima');
+    this.style.width = this.w + 'px';
+    this.style.height = this.h + 'px';
+}
 
-let dir = document.querySelector('#direita');
-
-let baixo = document.querySelector('#baixo');
-
-let esq = document.querySelector('#esquerda');
-
-let fps = 90;
-//Definindo alturas, larguras e posições de objetos
 if(innerHeight * (16/9) > innerWidth) {
- fundo.style.width = innerWidth + 'px';
- fundo.style.height = innerWidth * (9/16) + 'px';
-
+    fundo.setSize(innerWidth, innerWidth*(9/16))
 } else if(innerWidth * (9/16) > innerHeight) {
- fundo.style.height = innerHeight + 'px';
- fundo.style.width = innerHeight * (16/9) + 'px';
+    fundo.setSize(innerHeight * (16/9), innerHeight)
 } else {
- fundo.style.width = innerWidth  + 'px';
- fundo.style.height = innerHeight  + 'px';
+    fundo.setSize(innerWidth, innerHeight)
 }
 
-painel.style.width = 0.4 * parseFloat(fundo.style.height) + 'px';
-painel.style.height = 0.4 * parseFloat(fundo.style.height) + 'px';
+function build(elem, type, diam, x, y, spd) {
+    elem.classList.add(type);
 
-if (innerWidth < 1000) {
-    painel.style.width = 0.6 * parseFloat(fundo.style.height) + 'px';
-    painel.style.height = 0.6 * parseFloat(fundo.style.height) + 'px';   
+    elem.diam = diam;
+
+    elem.rad = this.diam / 2;
+
+    elem.x = x;
+
+    elem.y = y;
+
+    elem.spd = spd;
+
+    elem.setCoord = function(x_ = this.x, y_ = this.y) {
+        this.x = x_;
+        this.y = y_;
+
+        this.style.left = this.x - this.diam / 2 + 'px';
+        this.style.top = this.y - this.diam / 2 + 'px';
+    }
+
+    elem.setCoord();
+
+    elem.changeCoord = function(addX = 0, addY = 0) {
+        this.x += addX * this.spd;
+        this.y += addY * this.spd;
+
+        this.style.left = this.x - this.diam / 2 + 'px';
+        this.style.top = this.y - this.diam / 2 + 'px';
+    }
+
+    elem.setSize = function(diam_ = this.diam) {
+        this.diam = diam_;
+        this.rad = this.diam / 2;
+
+        this.style.width = this.diam + 'px';
+        this.style.height = this.diam + 'px';
+        this.style.borderRadius = this.diam + 'px';
+        this.changeCoord();
+    }
+
+    elem.setSize();
+
+    elem.changeSize = function(add = 0) {
+        this.diam += add;
+        this.rad += add / 2;
+
+        this.style.width = this.diam + 'px';
+        this.style.height = this.diam + 'px';
+        this.style.borderRadius = this.diam + 'px';
+        this.changeCoord();
+    }
+
+    elem.upWall = function(movement) {
+        return this.y - this.rad + movement * this.spd <= 0;
+    }
+
+    elem.leftWall = function(movement) {
+        return this.x - this.rad + movement * this.spd <= 0;
+    }
+
+    elem.downWall = function(movement) {
+        return this.y + this.rad + movement * this.spd >= fundo.h;
+    }
+
+    elem.rightWall = function(movement) {
+        return this.x + this.rad + movement * this.spd >= fundo.w;
+    }
+
+    elem.randoPos = function(dist = this.rad) {
+        return [Math.floor(Math.random() * (fundo.w - dist*2)) + dist, Math.floor(Math.random() * (fundo.h - dist*2)) + dist];
+    }
+
+    elem.desaparecer = async function (time = 100) {
+        this.style.transition = `${time/1000}s linear`
+        if (this.style.opacity === '0') {
+            this.style.opacity = '1';
+        } else {
+            this.style.opacity = '0';
+        }
+        await delay(time);
+    
+        this.style.transition = '';
+    }    
 }
 
-painel.style.left = parseFloat(fundo.style.width) - parseFloat(painel.style.width) + 'px';
-painel.style.top = parseFloat(fundo.style.height) - parseFloat(painel.style.height) + 'px';
-painel.children[0].style.lineHeight = painel.children[0].style.height;
-painel.children[2].style.lineHeight = painel.children[2].style.height;
-painel.children[1].children[0].style.lineHeight = painel.children[1].children[0].style.height;
-painel.children[1].children[2].style.lineHeight = painel.children[1].children[2].style.height;
-painel.children[0].style.fontSize = parseFloat(painel.children[0].style.height) + 'px';
-painel.children[2].style.fontSize = parseFloat(painel.children[2].style.height) + 'px';
-painel.children[1].children[0].style.fontSize = parseFloat(painel.children[1].children[0].style.height) + 'px';
-painel.children[1].children[2].style.fontSize = parseFloat(painel.children[1].children[2].style.height) + 'px';
+let p1 = document.createElement('div');
+build(p1, 'p1', fundo.h * 0.1, fundo.w * 0.5, fundo.h / 1.5, fundo.h * 0.01);
+fundo.appendChild(p1);
 
-p1.style.width = 0.1 * parseFloat(fundo.style.height) + 'px';
-p1.style.height = 0.1 * parseFloat(fundo.style.height) + 'px';
-p1.style.borderRadius = 0.1 * parseFloat(fundo.style.height) + 'px';
-p1.style.top = parseFloat(fundo.style.height) / (3/2) - parseFloat(p1.style.height) / 2 + 'px';
-p1.style.left = parseFloat(fundo.style.width) / 2 - parseFloat(p1.style.width) / 2 + 'px';
-
-enmy.style.width = 0.11 * parseFloat(fundo.style.height) + 'px';
-enmy.style.height = 0.11 * parseFloat(fundo.style.height) + 'px';
-enmy.style.borderRadius = 0.11 * parseFloat(fundo.style.height) + 'px';
-enmy.style.top = parseFloat(fundo.style.height) / 3 - parseFloat(enmy.style.height) / 2 + 'px';
-enmy.style.left = parseFloat(fundo.style.width) / 2 - parseFloat(enmy.style.width) / 2 + 'px';
+let enmy = document.createElement('div');
+build(enmy, 'enmy', fundo.h * 0.11, fundo.w * 0.5, fundo.h / 3, fundo.h * 0.012);
+fundo.appendChild(enmy);
 
 //Fazendo o site responsível à resizing
 window.addEventListener('resize', () => {
- if(innerHeight * (16/9) > innerWidth) {
- fundo.style.width = innerWidth + 'px';
- fundo.style.height = innerWidth * (9/16) + 'px'; 
- } else if(innerWidth * (9/16) > innerHeight) {
- fundo.style.height = innerHeight + 'px';
- fundo.style.width = innerHeight * (16/9) + 'px';
- } else {
- fundo.style.width = innerWidth + 'px';
- fundo.style.height = innerHeight + 'px';
- }
+    if(innerHeight * (16/9) > innerWidth) {
+        fundo.setSize(innerWidth, innerWidth * (9/16));
+    } else if(innerWidth * (9/16) > innerHeight) {
+        fundo.setSize(innerHeight * (16/9), innerHeight);
+    } else {
+        fundo.setSize(innerWidth, innerHeight);
+    }
+            
+    p1.setSize(0.1 * fundo.h);
 
-
- painel.style.width = 0.4 * parseFloat(fundo.style.height) + 'px';
- painel.style.height = 0.4 * parseFloat(fundo.style.height) + 'px';
-
-if (innerWidth < 1000) {
-    painel.style.width = 0.6 * parseFloat(fundo.style.height) + 'px';
-    painel.style.height = 0.6 * parseFloat(fundo.style.height) + 'px';   
-}
-
- painel.style.left = parseFloat(fundo.style.width) - parseFloat(painel.style.width) + 'px';
- painel.style.top = parseFloat(fundo.style.height) - parseFloat(painel.style.height) + 'px';
- painel.children[0].style.lineHeight = painel.children[0].style.height;
- painel.children[2].style.lineHeight = painel.children[2].style.height;
- painel.children[1].children[0].style.lineHeight = painel.children[1].children[0].style.height;
- painel.children[1].children[2].style.lineHeight = painel.children[1].children[2].style.height;
- painel.children[0].style.fontSize = parseFloat(painel.children[0].style.height) + 'px';
- painel.children[2].style.fontSize = parseFloat(painel.children[2].style.height) + 'px';
- painel.children[1].children[0].style.fontSize = parseFloat(painel.children[1].children[0].style.height) + 'px';
- painel.children[1].children[2].style.fontSize = parseFloat(painel.children[1].children[2].style.height) + 'px';
-  
- p1.style.width = 0.1 * parseFloat(fundo.style.height) + 'px';
- p1.style.height = 0.1 * parseFloat(fundo.style.height) + 'px';
- p1.style.borderRadius = 0.1 * parseFloat(fundo.style.height) + 'px';
-
- enmy.style.width = 0.11 * parseFloat(fundo.style.height) + 'px';
- enmy.style.height = 0.11 * parseFloat(fundo.style.height) + 'px';
- enmy.style.borderRadius = 0.11 * parseFloat(fundo.style.height) + 'px';
+    enmy.setSize(0.11 * fundo.h);
 })
 
 //Função de delay (BOM!!!)
 function delay(ms) {
- return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function spdyAnima(time, thing, effect) {
- thing.classList.toggle(time);
- thing.classList.toggle(effect);
-
- if(time == 'animar1') {
- await delay(100)
- } else if(time == 'animar5') {
- await delay(500)
- }
-
- thing.classList.toggle(time);
+//Funções úteis
+function round(num) {
+    if (num - Math.floor(num) < Math.ceil(num) - num) {
+        return Math.floor(num);
+    } else {
+        return Math.ceil(num);
+    }
 }
 
-//Realizar a movimentação do jogadores
-function stopMouse(lado) {
-    return new Promise(resolve => {
-        lado.addEventListener('mouseup', resolve);
-        lado.addEventListener('mouseout', resolve); 
-    })
+async function collision(other, scale = 1) {
+    let x, y, z, r1, r2;
+ 
+    r1 = parseFloat(p1.style.width) / 2;
+
+    r2 = parseFloat(other.style.width) / 2;
+
+    x = (parseFloat(p1.style.left) + r1) - (parseFloat(other.style.left) + r2);
+    y = (parseFloat(p1.style.top) + r1) - (parseFloat(other.style.top) + r2);
+    z = Math.sqrt(x**2 + y**2);
+
+    if (z < r1+r2*scale) {
+        p1.classList.add('defeated');
+    }
+    
+    if(p1.classList.contains('defeated')) {
+        await delay(300);
+    }
 }
 
-function stopTouch(lado) {
-    return new Promise(resolve => {
-        lado.addEventListener('touchend', resolve);
-        lado.addEventListener('touchmove', resolve); 
-    })
-}   
-let p1Speed = parseFloat(fundo.style.height) * 0.01;
+function sine(value) {
+        return Math.sin(value*(Math.PI/180));
+}
 
-let movingUp = 0;
+function cosine(value) {
+    return Math.cos(value*(Math.PI/180));
+}
 
-let movingRight = 0;
+function arcsine(value) {
+    return Math.asin(value)*(180/Math.PI);
+}
 
-let movingDown = 0;
+function arccos(value) {
+    return Math.asin(value)*(180/Math.PI);
+}
 
-let movingLeft = 0;
+function getAng(a, b) {
+    let z = Math.sqrt(a**2 + b**2);
 
-window.addEventListener('keydown', async function() {
-    if (event.key == 'w' || event.key == 'W') {
+    if(b < 0) {
+        return arccos(a/z);
+    } else if(b >= 0) {
+        return -arccos(a/z);
+    } else if(a < 0 && b >= 0) {
+        return -arccos(a/z);
+    }
+}
 
-        if(!movingUp) {
-            movingUp = 1;
+function modulo(valor) {
+    return Math.sqrt((valor)**2);
+}
+
+//Realizar a movimentação do jogador
+
+p1.moving = {
+    up: 0,
+
+    right: 0,
+
+    down: 0,
+
+    left: 0,
+
+    track: 0
+}
+
+window.addEventListener('keydown', async e => {
+
+    if (e.key == 'w' || e.key == 'W') {
+
+        if(!p1.moving.up && !p1.moving.track) {
+            p1.moving.up = 1;
         } else {
             return;
         }
     
-        let doIt = 1;
+        let ir = 1;
 
-        window.addEventListener('keyup', () => {
-            if (event.key == 'w' || event.key == 'W') {
-                doIt = 0;
+        function stopIt(ev) {
+            if (ev.key == 'w' || ev.key == 'W') {
+                ir = 0;
             }
-        })
+        }
 
-        while(doIt) {
-            if(parseFloat(p1.style.top) - p1Speed <= 0) {
-                p1.style.top = 0;
+        window.addEventListener('keyup', stopIt);
+
+        while(ir) {
+            if(p1.upWall(-1)) {
+                p1.setCoord(undefined, p1.rad);
+            } else if (p1.moving.right || p1.moving.down || p1.moving.left) {
+                p1.changeCoord(0, -Math.sqrt(2) / 2);
             } else {
-                p1.style.top = (parseFloat(p1.style.top) - p1Speed) + 'px';
+                p1.changeCoord(0, -1);
             }
         
             await delay(1000/fps)
         }
 
-        movingUp = 0;
-    } else if (event.key == 'a' || event.key == 'A') {
+        window.removeEventListener('keyup', stopIt);
 
-        if(!movingLeft) {
-            movingLeft = 1;
+        p1.moving.up = 0;
+    }
+})
+
+window.addEventListener('keydown', async e => {
+
+    if (e.key == 'a' || e.key == 'A') {
+
+        if(!p1.moving.left && !p1.moving.track) {
+            p1.moving.left = 1;
         } else {
             return;
         }
 
-        let doIt = 1;
+        let ir = 1;
 
-        window.addEventListener('keyup', () => {
-            if (event.key == 'a' || event.key == 'A') {
-                doIt = 0;
+        function stopIt(ev) {
+            if (ev.key == 'a' || ev.key == 'A') {
+                ir = 0;
             }
-        })
+        }
 
-        while(doIt) {
-            if(parseFloat(p1.style.left) - p1Speed <= 0) {
-                p1.style.left = '0';
+        window.addEventListener('keyup', stopIt);
+
+        while(ir) {
+            if(p1.leftWall(-1)) {
+                p1.setCoord(p1.rad, undefined);
+            } else if (p1.moving.up || p1.moving.right || p1.moving.down) {
+                p1.changeCoord(-Math.sqrt(2) / 2, 0);
             } else {
-                p1.style.left = (parseFloat(p1.style.left) - p1Speed) + 'px';
+                p1.changeCoord(-1, 0);
             }
 
             await delay(1000/fps)
         }
 
-        movingLeft = 0;
-    } else if (event.key == 's' || event.key == 'S') {
+        window.removeEventListener('keyup', stopIt);
 
-        if(!movingDown) {
-            movingDown = 1;
+        p1.moving.left = 0;
+    }
+})
+
+window.addEventListener('keydown', async e => {
+
+    if (e.key == 's' || e.key == 'S') {
+
+        if(!p1.moving.down && !p1.moving.track) {
+            p1.moving.down = 1;
         } else {
             return;
         }
     
-        let doIt = 1;
+        let ir = 1;
 
-        window.addEventListener('keyup', () => {
-            if (event.key == 's' || event.key == 'S') {
-                doIt = 0;
+        function stopIt(ev) {
+            if (ev.key == 's' || ev.key == 'S') {
+                ir = 0;
             }
-        })
+        }
+
+        window.addEventListener('keyup', stopIt);
     
-        while(doIt) {
-            if(parseFloat(p1.style.top) + parseFloat(p1.style.height) + p1Speed > parseFloat(fundo.style.height)) {
-                p1.style.top = parseFloat(fundo.style.height) - parseFloat(p1.style.height);
+        while(ir) {
+            if(p1.downWall(1)) {
+                p1.setCoord(undefined, fundo.h - p1.rad);
+            } else if (p1.moving.left || p1.moving.up || p1.moving.right) {
+                p1.changeCoord(0, Math.sqrt(2) / 2);
             } else {
-                p1.style.top = (parseFloat(p1.style.top) + p1Speed) + 'px';
+                p1.changeCoord(0, 1);
             }
 
             await delay(1000/fps)
         }
         
-        movingDown = 0;
-    } else if (event.key == 'd' || event.key == 'D') {
+        window.removeEventListener('keyup', stopIt);
 
-        if(!movingRight) {
-            movingRight = 1;
+        p1.moving.down = 0;
+    }
+})
+
+window.addEventListener('keydown', async e => {
+
+    if (e.key == 'd' || e.key == 'D') {
+
+        if(!p1.moving.right && !p1.moving.track) {
+            p1.moving.right = 1;
         } else {
             return;
         }
 
-        let doIt = 1;
+        let ir = 1;
 
-        window.addEventListener('keyup', () => {
-            if (event.key == 'd' || event.key == 'D') {
-                doIt = 0;
+        function stopIt(ev) {
+            if (ev.key == 'd' || ev.key == 'D') {
+                ir = 0;
             }
-        })
+        }
+
+        window.addEventListener('keyup', stopIt);
     
-        while(doIt) {
-            if(parseFloat(p1.style.left) + parseFloat(p1.style.width) + p1Speed > parseFloat(fundo.style.width)) {
-                p1.style.left = parseFloat(fundo.style.width) - parseFloat(p1.style.width);
+        while(ir) {
+            if(p1.rightWall(1)) {
+                p1.setCoord(fundo.w - p1.rad, undefined);
+            } else if (p1.moving.down || p1.moving.left || p1.moving.up) {
+                p1.changeCoord(Math.sqrt(2) / 2, 0) ;
             } else {
-                p1.style.left = (parseFloat(p1.style.left) + p1Speed) + 'px';
+                p1.changeCoord(1, 0);
             }
         
             await delay(1000/fps);
         }
 
-        movingRight = 0;
+        window.removeEventListener('keyup', stopIt);
+
+        p1.moving.right = 0;
     }
 })
 
-let once = 0;
+fundo.addEventListener('mousedown', async e => {
 
-cima.addEventListener('mousedown', async function() {
-    if(!once) {
-        once = 1;
+    if(!p1.moving.track && !p1.moving.up && !p1.moving.right && !p1.moving.down && !p1.moving.left) {
+        p1.moving.track = 1;
     } else {
         return;
     }
 
-    let doIt = 1;
+    let parar = false;
 
-    stopMouse(cima)
-        .then(() => doIt = 0)
+    async function parou() {
+        parar = true;
+    }
 
-    while(doIt) {
-        if(parseFloat(p1.style.top) - p1Speed <= 0) {
-            p1.style.top = 0;
-        } else {
-            p1.style.top = (parseFloat(p1.style.top) - p1Speed) + 'px';
+    window.addEventListener('mouseup', parou);
+
+    let xf, yf, a, b, c, count;
+
+    function setDirections(event) {
+        xf = event.clientX - fundo.getBoundingClientRect().x;
+
+        yf = event.clientY - fundo.getBoundingClientRect().y;
+    
+        if(xf < p1.rad) {
+            xf = p1.rad;
+        } else if (xf + p1.rad > fundo.w) {
+            xf = fundo.w - p1.rad;
+        }
+    
+        if(yf < p1.rad) {
+            yf = p1.rad;
+        } else if (yf + p1.rad > fundo.h) {
+            yf = fundo.h - p1.rad;
+        }
+    
+        a = xf - p1.x;
+    
+        b = yf - p1.y;
+    
+        c = Math.sqrt(a**2 + b**2);
+
+        count = 0;
+    }
+
+    setDirections(e);
+
+    window.addEventListener('mousemove', setDirections);
+
+    while(!parar) {
+        if(count == Math.floor(c/p1.spd)) {
+            p1.setCoord(xf, yf);
+            await delay(1000/fps);
+            continue;
         }
 
-        await delay(1000/fps)
+        p1.changeCoord((a/c), (b/c));
+        count++;
+    
+        await delay(1000/fps);
     }
 
-    once = 0;
+    window.removeEventListener('mousemove', setDirections);
+    window.removeEventListener('mouseup', parou);
+
+    p1.moving.track = 0;
 })
 
-dir.addEventListener('mousedown', async function() {
-    if(!once) {
-        once = 1;
-    } else {
-        return;
-    }
+//Ataques do inimigo
 
-    let doIt = 1;
+function buildProj(elem, type, diam, origin, spd) {
+    build(elem, type, diam, origin.x, origin.y, spd);
 
-    stopMouse(dir)
-        .then(() => doIt = 0)
+    elem.launch = async function(xf, yf) {
+        let a, b, c;
 
-    while(doIt) {
-        if(parseFloat(p1.style.left) + parseFloat(p1.style.width) + p1Speed > parseFloat(fundo.style.width)) {
-            p1.style.left = parseFloat(fundo.style.width) - parseFloat(p1.style.width) + 'px';
-        } else {
-            p1.style.left = (parseFloat(p1.style.left) + p1Speed) + 'px';
+        a = xf - this.x;
+
+        b = yf - this.y;
+
+        c = Math.sqrt(a**2 + b**2);
+
+        while(!this.leftWall(a/c) && !this.rightWall(a/c) && !this.upWall(b/c) && !this.downWall(b/c)) {
+            this.changeCoord((a/c), (b/c));
+    
+            collision(this);
+    
+            await delay(1000/fps);
         }
+    
+        if(this.leftWall(a/c)) {
+            this.changeCoord(0, (b/a) * -(this.x-this.rad) / this.spd)
+            this.setCoord(this.rad, undefined);
 
-        await delay(1000/fps)
-    }
+        } else if(this.rightWall(a/c)) {
+            this.changeCoord(0, (b/a) * (fundo.w-this.rad-this.a) / this.spd)
+            this.setCoord(fundo.w-this.rad, undefined);
 
-    once = 0;
-})
+        } else if(this.upWall(b/c)) {
+            this.changeCoord((a/b) * -(this.y-this.rad) / this.spd, 0)
+            this.setCoord(undefined, this.rad);
 
-baixo.addEventListener('mousedown', async function() {
-    if(!once) {
-        once = 1;
-    } else {
-        return;
-    }
-
-    let doIt = 1;
-
-    stopMouse(baixo)
-        .then(() => doIt = 0)
-
-    while(doIt) {
-        if(parseFloat(p1.style.top) + parseFloat(p1.style.height) + p1Speed > parseFloat(fundo.style.height)) {
-            p1.style.top = parseFloat(fundo.style.height) - parseFloat(p1.style.height) + 'px';
-        } else {
-            p1.style.top = (parseFloat(p1.style.top) + p1Speed) + 'px';
+        } else if(this.downWall(b/c)) {
+            this.changeCoord((a/b) * (fundo.h-this.rad-this.y) / this.spd, 0)
+            this.setCoord(undefined, fundo.h-this.rad);
+            
         }
 
         await delay(1000/fps);
-    }
- 
-    once = 0;
-})
 
-esq.addEventListener('mousedown', async function() {
-    if(!once) {
-        once = 1;
-    } else {
-        return;
+        await this.desaparecer(150);
+    
+        fundo.removeChild(this);    
     }
 
-    let doIt = 1;
+    elem.spread = async function(xf, yf) {
+        let a, b, c;
 
-    stopMouse(esq)
-        .then(() => doIt = 0)
+        a = xf - this.x;
 
-    while(doIt) {
-        if(parseFloat(p1.style.left) - p1Speed <= 0) {
-            p1.style.left = '0';
-        } else {
-            p1.style.left = (parseFloat(p1.style.left) - p1Speed) + 'px';
+        b = yf - this.y;
+
+        c = Math.sqrt(a**2 + b**2);
+
+        for (let count = 0; count != Math.floor(c / this.spd); count++) {
+            this.changeCoord((a/c), (b/c));
+    
+            collision(this);
+    
+            await delay(1000/fps);
         }
 
-        await delay(1000/fps)
-    }
- 
-    once = 0;
-})
+        this.setCoord(xf, yf);
 
-cima.addEventListener('touchstart', async function() {
-    if(!once) {
-        once = 1;
-    } else {
-        return;
-    }
+        let proj = [];
 
-    let doIt = 1;
-
-    stopTouch(cima)
-        .then(() => doIt = 0)
-
-    while(doIt) {
-        if(parseFloat(p1.style.top) - p1Speed <= 0) {
-            p1.style.top = 0;
-        } else {
-            p1.style.top = (parseFloat(p1.style.top) - p1Speed) + 'px';
+        for (let i = 0; i < 4; i++) {
+            proj[i] = document.createElement('div');
+            buildProj(proj[i], 'shot', this.diam/1.5, this, fundo.h *0.015);
+            fundo.appendChild(proj[i]);
         }
 
-        await delay(1000/fps)
+        fundo.removeChild(this);
+
+        proj[0].launch(this.x, this.y-1);
+        proj[1].launch(this.x+1, this.y);
+        proj[2].launch(this.x, this.y+1);
+        proj[3].launch(this.x-1, this.y);
+    }
+}
+
+enmy.shoot = function() {
+    let shot = document.createElement('div');
+    
+    buildProj(shot, 'shot', this.diam/2, this, fundo.h *0.015);
+
+    fundo.appendChild(shot);
+
+    shot.launch(p1.x, p1.y);
+}
+
+enmy.shootSpread = function(xf = this.randoPos(this.rad*2.5)[0], yf = this.randoPos(this.rad*2.5)[1]) {
+    let spreadShot = document.createElement('div');
+    
+    buildProj(spreadShot, 'spreadShot', this.diam/1.75, this, fundo.h *0.014);
+
+    fundo.appendChild(spreadShot);
+
+    spreadShot.spread(xf, yf);
+}
+
+enmy.move = async function(xf = this.randoPos()[0], yf = this.randoPos()[1]) {
+    let a = xf - this.x;
+
+    let b = yf - this.y;
+
+    let c = Math.sqrt(a ** 2 + b ** 2);
+
+    for (let count = 0; count != Math.floor(c / this.spd); count++) {
+        if (count % 20 == 0) {
+            this.shoot();
+        }
+        this.changeCoord((a/c), (b/c));
+
+        collision(this);
+
+        await delay(1000 / fps);
     }
 
-    once = 0;
-})
+    this.setCoord(xf, yf);
+}
 
-dir.addEventListener('touchstart', async function() {
-    if(!once) {
-        once = 1;
-    } else {
-        return;
+function buildExpl(elem, type, diam, origin, spd) {
+    build(elem, type, diam, origin.x, origin.y, spd);
+
+    elem.activate = async function() {
+        this.classList.add('pulsing');
+
+        this.style.opacity = '1';
+    
+        fundo.appendChild(this);    
     }
 
-    let doIt = 1;
+    elem.boom = async function() {
+        this.classList.toggle('pulsing');
 
-    stopTouch(dir)
-        .then(() => doIt = 0)
+        let ogDiam = this.diam;
 
-    while(doIt) {
-        if(parseFloat(p1.style.left) + parseFloat(p1.style.width) + p1Speed > parseFloat(fundo.style.width)) {
-            p1.style.left = parseFloat(fundo.style.width) - parseFloat(p1.style.width) + 'px';
-        } else {
-            p1.style.left = (parseFloat(p1.style.left) + p1Speed) + 'px';
+        this.style.backgroundColor = 'rgb(255, 166, 0)';
+    
+        let duration = 0.25*fps;
+    
+        for (let count = 0; count < duration; count++) {
+            this.changeSize(6*ogDiam/duration);
+            this.changeCoord(0, 0);
+            this.style.opacity = parseFloat(this.style.opacity) - 0.8/duration + '';
+    
+            collision(this);
+            await delay(1000/fps);
+        }
+    
+        fundo.removeChild(this);
+    }
+}
+
+enmy.tp = async function(xf = this.randoPos()[0], yf = this.randoPos()[1]) {
+    await this.desaparecer(75);
+
+    this.setCoord(xf, yf);
+
+    this.desaparecer(75);
+}
+
+enmy.deployBomb = async function() {
+    let bomb = document.createElement('div');
+    
+    buildExpl(bomb, 'bomb', this.diam/2, this, fundo.h * 0.015);
+
+    bomb.activate();
+
+    this.tp();
+
+    await delay(1500);
+
+    bomb.boom();
+}
+
+function buildShadow(elem, type, origin, spd) {
+    build(elem, type, origin.diam, origin.x, origin.y, spd);
+
+    elem.move = async function(xf, yf, spdMod = 1, coll = false) {
+        this.spd *= spdMod;
+
+        let a = xf - this.x;
+    
+        let b = yf - this.y;
+    
+        let c = Math.sqrt(a ** 2 + b ** 2);
+    
+        for (let count = 0; count != Math.floor(c / this.spd); count++) {
+            this.changeCoord((a/c), (b/c))
+    
+            if(coll) {
+                collision(elem);
+            }
+    
+            await delay(1000/fps);
         }
 
-        await delay(1000/fps)
+        this.setCoord(xf, yf);
     }
 
-    once = 0;
-})
+    elem.trackMove = async function(spdMod = 1) {
+        this.spd *= spdMod;
+        let a, b, c, count;
 
-baixo.addEventListener('touchstart', async function() {
-    if(!once) {
-        once = 1;
-    } else {
-        return;
-    }
-
-    let doIt = 1;
-
-    stopTouch(baixo)
-        .then(() => doIt = 0)
-
-    while(doIt) {
-        if(parseFloat(p1.style.top) + parseFloat(p1.style.height) + p1Speed > parseFloat(fundo.style.height)) {
-            p1.style.top = parseFloat(fundo.style.height) - parseFloat(p1.style.height) + 'px';
-        } else {
-            p1.style.top = (parseFloat(p1.style.top) + p1Speed) + 'px';
+        function setDirections() {        
+            a = origin.x - elem.x;
+        
+            b = origin.y - elem.y;
+        
+            c = Math.sqrt(a**2 + b**2);
+    
+            count = 0;
         }
 
-        await delay(1000/fps);
+        setDirections();
+        
+        while(1) {
+            if(count == Math.floor(c/this.spd)) {
+                this.setCoord(origin.x, origin.y);
+                await delay(1000/fps);
+                continue;
+            }
+    
+            this.changeCoord((a/c), (b/c));
+            count++;
+        
+            setDirections();
+
+            await delay(1000/fps);
+        }
     }
- 
-    once = 0;
-})
 
-esq.addEventListener('touchstart', async function() {
-    if(!once) {
-        once = 1;
-    } else {
-        return;
-    }
-
-    let doIt = 1;
-
-    stopTouch(esq)
-        .then(() => doIt = 0)
-
-    while(doIt) {
-        if(parseFloat(p1.style.left) - p1Speed <= 0) {
-            p1.style.left = '0';
+    elem.lunge = async function(where = 0) {
+        let x0, y0, x1, y1;
+        
+        if(!(where % 2)) {
+            x0 = Math.floor(fundo.w * (4/100) + Math.random() * (fundo.w * (93/100) - this.rad));
+            await delay(50);
+            x1 = Math.floor(fundo.w * (4/100) + Math.random() * (fundo.w * (93/100) - this.rad));
         } else {
-            p1.style.left = (parseFloat(p1.style.left) - p1Speed) + 'px';
+            y0 = Math.floor(fundo.h * (4/100) + Math.random() * (fundo.h * (93/100) - this.rad));
+            await delay(50);
+            y1 = Math.floor(fundo.h * (4/100) + Math.random() * (fundo.h * (93/100) - this.rad));
+        }
+    
+        switch (where) {
+            case 0:
+                y0 = -this.rad;
+                y1 = fundo.h + this.rad;
+                break;
+        
+            case 1:
+                x0 = fundo.w + this.rad;
+                x1 = -this.rad;
+                break;
+            
+            case 2:
+                y0 = fundo.h + this.rad;
+                y1 = -this.rad;
+                break;
+            
+            case 3:
+                x0 = -this.rad;
+                x1 = fundo.w + this.rad;
+                break;
+            
+            default:
+                break;
+        }
+    
+        await delay(50);
+
+        this.style.opacity = '0.25';
+        await this.move(x0, y0);
+
+        let graph = document.createElement('div');
+    
+        buildGraph(graph, 'graph', this.diam, 0, this.x, this.y, this.spd * 2);
+
+        await delay(100);
+    
+        await graph.activate(x1, y1);
+
+        await delay(1500);
+    
+        this.style.opacity = '0.75';
+        await this.move(x1, y1, 3, true);
+
+        await graph.deactivate();
+
+        await delay(1000);
+    
+        this.style.opacity = '0.25';
+        await this.trackMove(1/3);    
+    }
+}
+
+function buildRect(elem, type, size, ang, x, y, spd) {
+    elem.classList.add(type);
+
+    elem.w = size;
+
+    elem.h = size;
+
+    elem.ang = ang;
+
+    elem.x = x;
+
+    elem.y = y;
+
+    elem.spd = spd;
+
+    elem.setCoord = function(x_ = this.x, y_ = this.y) {
+        this.x = x_;
+        this.y = y_;
+
+        this.style.left = this.x - this.w / 2 + 'px';
+        this.style.top = this.y - this.h / 2 + 'px';
+    }
+
+    elem.setCoord();
+
+    elem.changeCoord = function(addX = 0, addY = 0) {
+        this.x += addX * this.spd;
+        this.y += addY * this.spd;
+
+        this.style.left = this.x - this.w / 2 + 'px';
+        this.style.top = this.y - this.h / 2 + 'px';
+    }
+
+    elem.setSize = function(w_ = this.w, h_ = this.h) {
+        this.w = w_;
+        this.h = h_;
+
+        this.style.width = this.w + 'px';
+        this.style.height = this.h + 'px';
+        this.style.borderRadius = this.w + 'px';
+        this.changeCoord();
+    }
+
+    elem.setSize();
+
+    elem.changeSize = function(addW = 0, addH = 0) {
+        this.w += addW;
+        this.h += addH;
+
+        this.style.width = this.w + 'px';
+        this.style.height = this.h + 'px';
+        this.changeCoord();
+    }
+
+    elem.desaparecer = async function (time = 100) {
+        this.style.transition = `${time/1000}s linear`
+        if (this.style.opacity === '0') {
+            this.style.opacity = '1';
+        } else {
+            this.style.opacity = '0';
+        }
+        await delay(time);
+    
+        this.style.transition = '';
+    }
+}
+
+function buildGraph(elem, type, w, h, ang, x, y, spd) {
+    buildRect(elem, type, w, h, ang, x, y, spd);
+
+    elem.activate = async function(x1, y1) {
+        this.style.opacity = '0.15';
+
+        this.classList.toggle('flash');
+
+        let a = x1 - this.x;
+        let b = y1 - this.y;
+        let c = Math.sqrt(a**2 + b**2);
+
+        this.ang = getAng(a, b);
+        this.style.transform = `rotate(${this.ang}deg)`;
+
+        fundo.appendChild(this);
+
+        for(let count = 0; count != Math.floor(c/this.spd); count++) {
+            this.changeCoord((a/2/c), (b/2/c));
+            this.changeSize(0, c / Math.floor(c/this.spd))
+    
+            await delay(1000/fps);
         }
 
-        await delay(1000/fps)
+        this.setCoord(x1-a/2, y1-b/2);
     }
- 
-    once = 0;
-})
 
-//Movimentação do inimigo
-
-function randoPos() {
- return [Math.floor(Math.random() * (parseFloat(fundo.style.width) - parseFloat(enmy.style.width))), Math.floor(Math.random() * (parseFloat(fundo.style.height) - parseFloat(enmy.style.height)))]
+    elem.deactivate = async function() {
+        this.classList.toggle('flash');
+        await delay(10);
+        await this.desaparecer(150);
+        fundo.removeChild(this);    
+    }
 }
 
-let enmySpd = parseFloat(fundo.style.height) * 0.012;
+enmy.jutsuAttack = async function() {
+    await this.move(fundo.w / 2, fundo.h / 2);
 
-let projtilSpd = parseFloat(fundo.style.height) * 0.015;
+    let shadow = [];
 
-async function shootThere() {
- let midXP1 = parseFloat(p1.style.left) + parseFloat(p1.style.width) / 2;
- let midYP1 = parseFloat(p1.style.top) + parseFloat(p1.style.height) / 2;
+    for (let i = 0; i < 4; i++) {
+        shadow[i] = document.createElement('div');
+        buildShadow(shadow[i], 'shadow', this, this.spd*4);
+        fundo.appendChild(shadow[i]);
+    }
 
- let midXEnmy = parseFloat(enmy.style.left) + parseFloat(enmy.style.width) / 2;
- let midYEnmy = parseFloat(enmy.style.top) + parseFloat(enmy.style.height) / 2;
+    for (let i = 0; i < 4; i++) {
+        shadow[i].lunge(i);
+    }
 
- let distX = midXP1 - midXEnmy;
- let distY = midYP1 - midYEnmy;
+    this.desaparecer(50);
 
- let i = Math.sqrt(distX**2 + distY**2);
+    await delay(200);
 
- let projtil = document.createElement('div');
+    while(shadow[0].x !== this.x || shadow[1].x !== this.x || shadow[2].x !== this.x || shadow[3].x !== this.x) {
+        await delay(1000/120);
+    }
 
- projtil.classList.add('projtil');
+    for (let i = 0; i < 4; i++) {
+        fundo.removeChild(shadow[i]);
+    }
 
- projtil.style.width = 0.5 * parseFloat(enmy.style.height) + 'px';
- projtil.style.height = 0.5 * parseFloat(enmy.style.height) + 'px';
- projtil.style.borderRadius = 0.5 * parseFloat(enmy.style.height) + 'px';
-
- projtil.style.left = midXEnmy - parseFloat(projtil.style.width) / 2 + 'px';
- projtil.style.top = midYEnmy - parseFloat(projtil.style.height) / 2 + 'px';
-
- fundo.appendChild(projtil);
-
- while(parseFloat(projtil.style.left) + (distX / i) * projtilSpd > 0 && parseFloat(projtil.style.left) + (distX / i) * projtilSpd < (parseFloat(fundo.style.width) - parseFloat(projtil.style.width)) && parseFloat(projtil.style.top) + (distY / i) * projtilSpd > 0 && parseFloat(projtil.style.top) + (distY / i) * projtilSpd < (parseFloat(fundo.style.height) - parseFloat(projtil.style.height))) {
- projtil.style.left = parseFloat(projtil.style.left) + (distX / i) * projtilSpd + 'px';
- projtil.style.top = parseFloat(projtil.style.top) + (distY / i) * projtilSpd + 'px';
- collision(projtil)
-
- await delay(1000/fps);
- }
-
- if(parseFloat(projtil.style.left) + (distX / i) * projtilSpd < 0) {
- projtil.style.top = parseFloat(projtil.style.top) + (distY / distX) * parseFloat(projtil.style.left) * -1 + 'px';
- projtil.style.left = '0';
- } else if(parseFloat(projtil.style.left) + (distX / i) * projtilSpd > (parseFloat(fundo.style.width) - parseFloat(projtil.style.width))) {
- projtil.style.top = parseFloat(projtil.style.top) + (distY / distX) * ((parseFloat(fundo.style.width) - parseFloat(projtil.style.width)) - parseFloat(projtil.style.left)) + 'px';
- projtil.style.left = parseFloat(fundo.style.width) - parseFloat(projtil.style.width) + 'px';
- } else if(parseFloat(projtil.style.top) + (distY / i) * projtilSpd < 0) {
- projtil.style.left = parseFloat(projtil.style.left) + (distX / distY) * parseFloat(projtil.style.top) * -1 + 'px';
- projtil.style.top = '0';
- } else if(parseFloat(projtil.style.top) + (distY / i) * projtilSpd > (parseFloat(fundo.style.height) - parseFloat(projtil.style.height))) {
- projtil.style.left = parseFloat(projtil.style.left) + (distX / distY) * ((parseFloat(fundo.style.height) - parseFloat(projtil.style.height)) - parseFloat(projtil.style.top)) + 'px';
- projtil.style.top = parseFloat(fundo.style.height) - parseFloat(projtil.style.height) + 'px';
- }
-
- await delay(1000/fps);
-
- await spdyAnima('animar1', projtil, 'desaparece');
-
- fundo.removeChild(projtil);
+    this.desaparecer(1);
 }
 
-async function moveThere(coord = randoPos()) {
- let distX = coord[0] - parseFloat(enmy.style.left);
+enmy.lol = async function() {
+    let shadow = document.createElement('div');
+    buildShadow(shadow, 'shadow', this, this.spd*4);
+    fundo.appendChild(shadow);
 
- let distY = coord[1] - parseFloat(enmy.style.top);
+    await shadow.lunge(Math.floor(Math.random() * 4));
 
- let i = Math.sqrt(distX**2 + distY**2);
-
- for(let count = 0; count != Math.floor(i/enmySpd); count++) {
- if(count % 20 == 0) {
- shootThere();
- }
-
- enmy.style.left = parseFloat(enmy.style.left) + (distX / i) * enmySpd + 'px';
- enmy.style.top = parseFloat(enmy.style.top) + (distY / i) * enmySpd + 'px';
- collision(enmy);
-
- await delay(1000/fps);
- }
-
- enmy.style.left = coord[0] + 'px';
- enmy.style.top = coord[1] + 'px';
+    fundo.removeChild(shadow);
 }
 
 
-async function tpThere() {
- let coord = randoPos();
-
- await spdyAnima('animar1', enmy, 'desaparece');
-
- enmy.style.left = coord[0] + 'px';
-
- enmy.style.top = coord[1] + 'px';
-
- await spdyAnima('animar1', enmy, 'desaparece');
-}
-
-function cloneDis(cloned, clonee) {
- let elClone = document.createElement('div');
- elClone.classList.add(clonee);
-
- elClone.style.width = cloned.style.width;
- elClone.style.height = cloned.style.height;
- elClone.style.left = cloned.style.left;
- elClone.style.top = cloned.style.top;
-
- return elClone;
-}
-
-async function stndrtMove(thing, xi, xf, yi, yf, spd, coll) {
- let x, y, z;
-
- x = xf - xi;
-
- y = yf - yi;
-
- z = Math.sqrt(x**2 + y**2);
-
- for(let count = 0; count != Math.floor(z/spd); count++) {
- thing.style.left = parseFloat(thing.style.left) + (x / z) * spd + 'px';
- thing.style.top = parseFloat(thing.style.top) + (y / z) * spd + 'px';
-
- if(coll) {
- collision(thing);
- }
-
- await delay(1000/fps);
- }
-
- thing.style.left = xf + 'px';
- thing.style.top = yf + 'px';
-}
-
-async function fckngJutsu (where) {
- let clone, x0, x1, y0, y1, cloneSpd, rect, lineX, lineY, lineC, scale, rotate, rectSpd;
-
- //SEPARA
- clone = cloneDis(enmy, 'clone');
- clone.style.borderRadius = enmy.style.borderRadius;
-
- fundo.appendChild(clone);
-
- if(!(where % 2)) {
- x0 = Math.floor(parseFloat(fundo.style.width) * (4/100) + Math.random() * (parseFloat(fundo.style.width) * (93/100) - parseFloat(clone.style.width)));
- x1 = Math.floor(parseFloat(fundo.style.width) * (4/100) + Math.random() * (parseFloat(fundo.style.width) * (93/100) - parseFloat(clone.style.width)));
- } else {
- y0 = Math.floor(parseFloat(fundo.style.height) * (4/100) + Math.random() * (parseFloat(fundo.style.height) * (93/100) - parseFloat(clone.style.height)));
- y1 = Math.floor(parseFloat(fundo.style.height) * (4/100) + Math.random() * (parseFloat(fundo.style.height) * (93/100) - parseFloat(clone.style.height)));
- }
-
- switch (where) {
- case 0:
- y0 = -parseFloat(clone.style.height);
- y1 = parseFloat(fundo.style.height);
- break;
- 
- case 1:
- x0 = parseFloat(fundo.style.width);
- x1 = -parseFloat(clone.style.width);
- break;
- 
- case 2:
- y0 = parseFloat(fundo.style.height);
- y1 = -parseFloat(clone.style.height);
- break;
- 
- case 3:
- x0 = -parseFloat(clone.style.width);
- x1 = parseFloat(fundo.style.width);
- break;
- 
- default:
- break;
- }
-
- cloneSpd = enmySpd*4;
-
- await delay(100);
-
- await stndrtMove(clone, parseFloat(clone.style.left), x0, parseFloat(clone.style.top), y0, cloneSpd);
-
- //SEPARA
- rect = cloneDis(clone, 'rect');
-
- lineX = x1 - x0;
- lineY = y1 - y0;
- lineC = Math.sqrt(lineX**2 + lineY**2);
- scale = 1;
-
- fundo.appendChild(rect);
-
- switch (where) {
- case 0:
- rotate = -arcsine(lineX/lineC);
- break;
-
- case 1:
- rotate = 90-arcsine(lineY/lineC);
- break;
-
- case 2:
- rotate = 180+arcsine(lineX/lineC);
- break;
-
- case 3:
- rotate = 270+arcsine(lineY/lineC);
- break; 
- 
- default:
- break;
- }
-
- rectSpd = cloneSpd*2;
-
- await delay(100);
-
- for(let count = 0; count != Math.floor(lineC/rectSpd); count++) {
- rect.style.left = parseFloat(rect.style.left) + (lineX / 2 / lineC) * rectSpd + 'px';
- rect.style.top = parseFloat(rect.style.top) + (lineY / 2 / lineC) * rectSpd + 'px';
- scale += lineC / parseFloat(rect.style.height) / Math.floor(lineC/rectSpd);
- rect.style.transform = `rotate(${rotate}deg) scale(1, ${scale})`;
-
- await delay(1000/fps);
- }
-
- rect.style.left = x0 + lineX/2 + 'px';
- rect.style.top = y0 + lineY/2 + 'px';
- scale = lineC / parseFloat(rect.style.height);
- rect.style.transform = `rotate(${rotate}deg) scale(1, ${scale})`;
-
- //SEPARAR
- await delay(1500);
-
- stndrtMove(clone, x0, x1, y0, y1, cloneSpd*4, true);
- for(let count = 0; count != Math.floor(lineC/(cloneSpd * 4)); count++) {
- rect.style.left = parseFloat(rect.style.left) + (lineX / 2 / lineC) * (cloneSpd * 3) + 'px';
- rect.style.top = parseFloat(rect.style.top) + (lineY / 2 / lineC) * (cloneSpd * 3) + 'px';
- scale -= lineC / parseFloat(rect.style.height) / Math.floor(lineC/(cloneSpd * 3));
- rect.style.transform = `rotate(${rotate}deg) scale(1, ${scale})`;
-
- await delay(1000/fps);
- }
-
- fundo.removeChild(rect);
-
- await delay(1000);
-
- await stndrtMove(clone, x1, parseFloat(enmy.style.left), y1, parseFloat(enmy.style.top), cloneSpd)
-
- jutsuKey++;
-
- while(jutsuKey != 4) {
- await delay(1000/120);
- }
-
- fundo.removeChild(clone);
-}
-
-let jutsuKey = 0;
-
-function arcsine(value) {
- return Math.asin(value)*(180/Math.PI);
-}
-
-async function jutsuAttack() {
- await moveThere([parseFloat(fundo.style.width) / 2 - parseFloat(enmy.style.width) / 2, parseFloat(fundo.style.height) / 2 - parseFloat(enmy.style.height) / 2]);
-
- jutsuKey = 0;
-
- fckngJutsu(0);
- fckngJutsu(1);
- fckngJutsu(2);
- fckngJutsu(3);
-
- await delay(100);
-
- enmy.classList.toggle('desaparece');
-
- while(jutsuKey != 4) {
- await delay(1000/120);
- }
-
- enmy.classList.toggle('desaparece');
-}
-
-async function deployBomb() {
- let bomb = document.createElement('div');
- bomb.classList.add('bomb');
- bomb.classList.toggle('pulsing');
- bomb.style.height = parseFloat(enmy.style.height) / 2 + 'px';
- bomb.style.width = parseFloat(enmy.style.width) / 2 + 'px';
- bomb.style.borderRadius = parseFloat(enmy.style.borderRadius) / 2 + 'px';
- bomb.style.left = parseFloat(enmy.style.left) + (parseFloat(enmy.style.width) - parseFloat(bomb.style.width)) / 2 + 'px';
- bomb.style.top = parseFloat(enmy.style.top) + (parseFloat(enmy.style.height) - parseFloat(bomb.style.height)) / 2 + 'px';
- fundo.appendChild(bomb);
-
- tpThere();
-
- let diam = parseFloat(bomb.style.width);
-
- await delay(1500);
- bomb.classList.toggle('pulsing');
- bomb.classList.toggle('boom');
-
- for (let count = 0; count < 30; count++) {
- collision(bomb, 1 + count*0.2);
- await delay(10);
- }
- fundo.removeChild(bomb);
-}
-
-function cosine(value) {
- return Math.cos(value*(Math.PI/180));
-}
-
-function sine(value) {
- return Math.sin(value*(Math.PI/180));
-}
-
-/* Vencido uma vez... Para depois!
 async function formWeapon() {
- let weapon = document.createElement('div');
- weapon.classList.add('weapon');
- weapon.style.height = parseFloat(enmy.style.height) / 2 + 'px';
- weapon.style.width = parseFloat(enmy.style.width) / 2 + 'px';
- weapon.style.borderRadius = parseFloat(weapon.style.height) / 4 + 'px';
+    let weapon, scale, rotate;
+    weapon = document.createElement('div');
+    weapon.classList.add('weapon');
+    weapon.style.height = parseFloat(enmy.style.height) / 2 + 'px';
+    weapon.style.width = parseFloat(enmy.style.width)/4 + 'px';
+    weapon.style.borderRadius = parseFloat(weapon.style.height) / 4 + 'px';
+    weapon.style.top = parseFloat(enmy.style.top) + parseFloat(enmy.style.height) / 4 + 'px';
+    weapon.style.left = parseFloat(enmy.style.left) + parseFloat(enmy.style.width) / 2 + 'px';
 
- weapon.style.top = parseFloat(enmy.style.top) + parseFloat(enmy.style.height) * 0.25 + 'px';
- weapon.style.left = parseFloat(enmy.style.left) + parseFloat(enmy.style.width) * (1/2) + 'px';
+    scale = 0;
+    rotate = 0;
+    weapon.style.transform = `scale(${scale}, 1)`;
 
- let scale = 0;
- let rotate = 0;
- weapon.style.transform = `scale(${scale}, 1)`;
+    fundo.appendChild(weapon);
 
- console.log(((parseFloat(weapon.style.left) - parseFloat(enmy.style.left)) + parseFloat(weapon.style.width)/2))
- console.log(((parseFloat(weapon.style.left) - parseFloat(enmy.style.left)) + parseFloat(weapon.style.width)/2) + parseFloat(weapon.style.width) *4.5-((parseFloat(weapon.style.width) * 4.5) * cosine(30)))
+    for (let count = 0; count < 30; count++) {
+        scale += 4.5/15;
+        rotate += 1;
+        weapon.style.transform = `rotate(${-rotate}deg) scale(${scale}, 1)`;
+        weapon.style.left = parseFloat(weapon.style.left) + parseFloat(weapon.style.width) * 0.075 + 'px';
+        await delay(1000/fps);
+    }
 
- fundo.appendChild(weapon);
+    await delay(100);
 
- for (let count = 0; count < 30; count++) {
- scale += 0.15;
- rotate += 1;
- weapon.style.transform = `rotate(${-rotate}deg) scale(${scale}, 1)`;
- weapon.style.left = parseFloat(weapon.style.left) + parseFloat(weapon.style.width) * 0.075 + 'px';
- await delay(1000/fps);
- }
+    let rad = parseFloat(weapon.style.left) + parseFloat(weapon.style.width) / 2 - parseFloat(enmy.style.left) - parseFloat(enmy.style.width) / 2;
 
- console.log(parseFloat(weapon.style.width) * 4.5)
- console.log(parseFloat(weapon.style.width) *4.5-((parseFloat(weapon.style.width) * 4.5) * cosine(30)))
+    await delay(200);
 
- await delay(100);
+    async function weaponAttack() {
+        let x, y, z;
 
- let rad = parseFloat(weapon.style.left) + parseFloat(weapon.style.width) / 2 - parseFloat(enmy.style.left) - parseFloat(enmy.style.width) / 2;
+        let ex = parseFloat(weapon.style.left) + parseFloat(weapon.style.width) / 2;
+        let wy = parseFloat(weapon.style.top) + parseFloat(weapon.style.height) / 2;
 
- await delay(200);
+        x = parseFloat(p1.style.left) + (parseFloat(p1.style.width)/2 - parseFloat(enmy.style.width)/2) - parseFloat(enmy.style.left);
+        
+        y = parseFloat(p1.style.top) + (parseFloat(p1.style.height)/2 - parseFloat(enmy.style.height)/2) - parseFloat(enmy.style.top);
+        
+        z = Math.sqrt(x**2 + y**2);
+        
+        while(parseFloat(enmy.style.left) + (x / z) * enmy.spd > 0 && parseFloat(enmy.style.left) + (x / z) * enmy.spd < (fundo.w - parseFloat(enmy.style.width)) && parseFloat(enmy.style.top) + (y / z) * enmy.spd > 0 && parseFloat(enmy.style.top) + (y / z) * enmy.spd < (fundo.h - parseFloat(enmy.style.height))) {
+            enmy.style.left = parseFloat(enmy.style.left) + (x / z) * enmy.spd + 'px';
+            enmy.style.top = parseFloat(enmy.style.top) + (y / z) * enmy.spd + 'px';
+            collision(enmy);
 
- async function moveing() {
- let x, y, z;
+            rotate -= 10;
+            weapon.style.left = rad * cosine(-rotate+30) + parseFloat(enmy.style.left) + parseFloat(enmy.style.width) / 2 - parseFloat(weapon.style.width) / 2 + 'px';
+            weapon.style.top = rad * sine(-rotate+30) + parseFloat(enmy.style.top) + parseFloat(enmy.style.height) / 2 - parseFloat(weapon.style.height) / 2 + 'px';
 
- x = parseFloat(p1.style.left) + (parseFloat(p1.style.width)/2 - parseFloat(enmy.style.width)/2) - parseFloat(enmy.style.left);
- 
- y = parseFloat(p1.style.top) + (parseFloat(p1.style.height)/2 - parseFloat(enmy.style.height)/2) - parseFloat(enmy.style.top);
- 
- z = Math.sqrt(x**2 + y**2);
- 
- while(parseFloat(enmy.style.left) + (x / z) * enmySpd > 0 && parseFloat(enmy.style.left) + (x / z) * enmySpd < (parseFloat(fundo.style.width) - parseFloat(enmy.style.width)) && parseFloat(enmy.style.top) + (y / z) * enmySpd > 0 && parseFloat(enmy.style.top) + (y / z) * enmySpd < (parseFloat(fundo.style.height) - parseFloat(enmy.style.height))) {
- enmy.style.left = parseFloat(enmy.style.left) + (x / z) * enmySpd + 'px';
- enmy.style.top = parseFloat(enmy.style.top) + (y / z) * enmySpd + 'px';
- collision(enmy);
- rotate -= 10;
- weapon.style.left = rad * cosine(-rotate+30) + parseFloat(enmy.style.left) + parseFloat(enmy.style.width) / 2 - parseFloat(weapon.style.width) / 2 + 'px';
- weapon.style.top = rad * sine(-rotate+30) + parseFloat(enmy.style.top) + parseFloat(enmy.style.height) / 2 - parseFloat(weapon.style.height) / 2 + 'px';
- weapon.style.transform = `rotate(${-rotate}deg) scale(${scale}, 1)`;
- 
- await delay(1000/fps);
- }
- }
+            weapon.style.transform = `rotate(${-rotate}deg) scale(${scale}, 1)`;
+            
+            await delay(1000/fps);
+        }
+    }
 
- await moveing();
- await moveing();
- await moveing();
- await moveing();
+    console.log(scale)
+    console.log(rotate)
+    /*
+    42.6319*4.5
 
- await delay(200);
+    191.84355
 
- await spdyAnima('animar1', weapon, 'desaparece');
+    784.91-191.84355/2+42.6319/2
+    710.304175
 
- fundo.removeChild(weapon);
-}
-*/
+    parseFloat(enmy.style.left) + parseFloat(enmy.style.width) / 2
+    688.9999
 
-async function collision(attacker, scales = 0) {
- let x, y, z, rp1, rAtk;
- 
- rp1 = parseFloat(p1.style.width) / 2;
+    688.9999-191.84355/2
+    593.078125
 
- rAtk = parseFloat(attacker.style.width) / 2;
+    await weaponAttack();
+    await weaponAttack();
+    await weaponAttack();
+    await weaponAttack();
 
- x = (parseFloat(p1.style.left) + rp1) - (parseFloat(attacker.style.left) + rAtk);
- y = (parseFloat(p1.style.top) + rp1) - (parseFloat(attacker.style.top) + rAtk);
- z = Math.sqrt(x**2 + y**2);
+    await delay(200);
 
- if(scales) {
- if (z < rp1+rAtk*scales) {
- p1.classList.add('defeated');
- } 
- } else {
- if (z < rp1+rAtk) {
- p1.classList.add('defeated');
- } 
- }
-
- if(p1.classList.contains('defeated')) {
- await delay(300);
- }
+    fundo.removeChild(weapon);
+    */
 }
 
 async function bigText(texto, time = 0) {
     let text = document.createElement('div');
     text.classList.add('bigText')
     text.innerHTML = texto;
-    text.style.width = parseFloat(fundo.style.width) + 'px';
-    text.style.height = parseFloat(fundo.style.height) + 'px';
-    text.style.left = parseFloat(fundo.style.width)/2 - parseFloat(text.style.width)/2 + 'px';
-    text.style.top = parseFloat(fundo.style.height)/2 - parseFloat(text.style.height)/2 + 'px';
+    text.style.width = fundo.w + 'px';
+    text.style.height = fundo.h + 'px';
+    text.style.left = fundo.w/2 - parseFloat(text.style.width)/2 + 'px';
+    text.style.top = fundo.h/2 - parseFloat(text.style.height)/2 + 'px';
     text.style.lineHeight = text.style.height;
     text.style.fontSize = parseFloat(text.style.height)/2 + 'px';
     fundo.appendChild(text);
@@ -895,30 +976,16 @@ async function bigText(texto, time = 0) {
         fundo.removeChild(text);
     }
 }
-
+/*
 async function startGame() {
     await bigText('3', 1000);
     await bigText('2', 1000);
     await bigText('1', 1000);
 }
 
-
-function cloneDis(cloned, clonee) {
-    let elClone = document.createElement('div');
-    elClone.classList.add(clonee);
-   
-    elClone.style.width = cloned.style.width;
-    elClone.style.height = cloned.style.height;
-    elClone.style.left = cloned.style.left;
-    elClone.style.top = cloned.style.top;
-   
-    return elClone;
-   }
 let orbCount = 0;
 async function createOrbs() {
     let coords = randoPos();
-    console.log(coords[0])
-    console.log(coords[1])
     let orb = document.createElement('div');
     orb.classList.add('orb');
     orb.style.left = coords[0] + 'px';
@@ -1024,3 +1091,4 @@ async function doGame() {
 }
 
 doGame();
+*/
