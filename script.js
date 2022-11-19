@@ -113,7 +113,7 @@ let p1 = document.createElement('div');
 build(p1, 'p1', fundo.h * 0.1, fundo.w * 0.25, fundo.h * (3/4), fundo.h * 0.01);
 
 let enmy = document.createElement('div');
-build(enmy, 'enmy', fundo.h * 0.11, fundo.w * 0.75, fundo.h * (3/4), fundo.h * 0.012);
+build(enmy, 'enmy', fundo.h * 0.11, fundo.w * 0.75, fundo.h * (3/4), fundo.h * 0.009);
 
 //Fazendo o site responsível à resizing
 window.addEventListener('resize', () => {
@@ -549,7 +549,7 @@ function buildProj(elem, type, diam, origin, spd) {
 
         for (let i = 0; i < 4; i++) {
             proj[i] = document.createElement('div');
-            buildProj(proj[i], 'shot', this.diam/1.5, this, fundo.h *0.015);
+            buildProj(proj[i], 'shot', this.diam/1.5, this, fundo.h *01125);
             fundo.appendChild(proj[i]);
         }
 
@@ -565,7 +565,7 @@ function buildProj(elem, type, diam, origin, spd) {
 enmy.shoot = function() {
     let shot = document.createElement('div');
     
-    buildProj(shot, 'shot', this.diam/2, this, fundo.h *0.015);
+    buildProj(shot, 'shot', this.diam/2, this, fundo.h *0.01125);
 
     fundo.appendChild(shot);
 
@@ -575,7 +575,7 @@ enmy.shoot = function() {
 enmy.shootSpread = function() {
     let spreadShot = document.createElement('div');
     
-    buildProj(spreadShot, 'spreadShot', this.diam/1.75, this, fundo.h *0.014);
+    buildProj(spreadShot, 'spreadShot', this.diam/1.75, this, fundo.h *0.0105);
 
     fundo.appendChild(spreadShot);
 
