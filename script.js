@@ -549,7 +549,7 @@ function buildProj(elem, type, diam, origin, spd) {
 
         for (let i = 0; i < 4; i++) {
             proj[i] = document.createElement('div');
-            buildProj(proj[i], 'shot', this.diam/1.5, this, fundo.h *01125);
+            buildProj(proj[i], 'shot', this.diam/1.5, this, fundo.h *0.01125);
             fundo.appendChild(proj[i]);
         }
 
