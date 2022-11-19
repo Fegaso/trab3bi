@@ -110,12 +110,10 @@ function build(elem, type, diam, x, y, spd) {
 }
 
 let p1 = document.createElement('div');
-build(p1, 'p1', fundo.h * 0.1, fundo.w * 0.5, fundo.h / 1.5, fundo.h * 0.01);
-fundo.appendChild(p1);
+build(p1, 'p1', fundo.h * 0.1, fundo.w * 0.25, fundo.h * (3/4), fundo.h * 0.01);
 
 let enmy = document.createElement('div');
-build(enmy, 'enmy', fundo.h * 0.11, fundo.w * 0.5, fundo.h / 3, fundo.h * 0.012);
-fundo.appendChild(enmy);
+build(enmy, 'enmy', fundo.h * 0.11, fundo.w * 0.75, fundo.h * (3/4), fundo.h * 0.012);
 
 //Fazendo o site responsível à resizing
 window.addEventListener('resize', () => {
@@ -138,31 +136,16 @@ function delay(ms) {
 }
 
 //Funções úteis
-function round(num) {
-    if (num - Math.floor(num) < Math.ceil(num) - num) {
-        return Math.floor(num);
-    } else {
-        return Math.ceil(num);
-    }
-}
-
-async function collision(other, scale = 1) {
-    let x, y, z, r1, r2;
+async function collision(other) {
+    let a, b, c;
  
-    r1 = parseFloat(p1.style.width) / 2;
+    a = p1.x - other.x;
+    b = p1.y - other.y;
+    c = Math.sqrt(a**2 + b**2);
 
-    r2 = parseFloat(other.style.width) / 2;
-
-    x = (parseFloat(p1.style.left) + r1) - (parseFloat(other.style.left) + r2);
-    y = (parseFloat(p1.style.top) + r1) - (parseFloat(other.style.top) + r2);
-    z = Math.sqrt(x**2 + y**2);
-
-    if (z < r1+r2*scale) {
+    if (c < p1.rad+other.rad) {
         p1.classList.add('defeated');
-    }
-    
-    if(p1.classList.contains('defeated')) {
-        await delay(300);
+        thud.play();
     }
 }
 
@@ -188,8 +171,6 @@ function getAng(a, b) {
     if(b < 0) {
         return arccos(a/z);
     } else if(b >= 0) {
-        return -arccos(a/z);
-    } else if(a < 0 && b >= 0) {
         return -arccos(a/z);
     }
 }
@@ -431,12 +412,79 @@ fundo.addEventListener('mousedown', async e => {
     p1.moving.track = 0;
 })
 
+fundo.addEventListener('touchstart', async e => {
+    console.log('lol')
+    if(!p1.moving.track && !p1.moving.up && !p1.moving.right && !p1.moving.down && !p1.moving.left) {
+        p1.moving.track = 1;
+    } else {
+        return;
+    }
+
+    let parar = false;
+
+    async function parou() {
+        parar = true;
+    }
+
+    window.addEventListener('touchend', parou);
+
+    let xf, yf, a, b, c, count;
+
+    function setDirections(event) {
+        xf = event.touches[0].clientX - fundo.getBoundingClientRect().x;
+
+        yf = event.touches[0].clientY - fundo.getBoundingClientRect().y;
+    
+        if(xf < p1.rad) {
+            xf = p1.rad;
+        } else if (xf + p1.rad > fundo.w) {
+            xf = fundo.w - p1.rad;
+        }
+    
+        if(yf < p1.rad) {
+            yf = p1.rad;
+        } else if (yf + p1.rad > fundo.h) {
+            yf = fundo.h - p1.rad;
+        }
+    
+        a = xf - p1.x;
+    
+        b = yf - p1.y;
+    
+        c = Math.sqrt(a**2 + b**2);
+
+        count = 0;
+    }
+
+    setDirections(e);
+
+    window.addEventListener('touchmove', setDirections);
+
+    while(!parar) {
+        if(count == Math.floor(c/p1.spd)) {
+            p1.setCoord(xf, yf);
+            await delay(1000/fps);
+            continue;
+        }
+
+        p1.changeCoord((a/c), (b/c));
+        count++;
+    
+        await delay(1000/fps);
+    }
+
+    window.removeEventListener('touchmove', setDirections);
+    window.removeEventListener('touchend', parou);
+
+    p1.moving.track = 0;
+})
+
 //Ataques do inimigo
 
 function buildProj(elem, type, diam, origin, spd) {
     build(elem, type, diam, origin.x, origin.y, spd);
 
-    elem.launch = async function(xf, yf) {
+    elem.launch = async function(xf = p1.x, yf = p1.y) {
         let a, b, c;
 
         a = xf - this.x;
@@ -458,7 +506,7 @@ function buildProj(elem, type, diam, origin, spd) {
             this.setCoord(this.rad, undefined);
 
         } else if(this.rightWall(a/c)) {
-            this.changeCoord(0, (b/a) * (fundo.w-this.rad-this.a) / this.spd)
+            this.changeCoord(0, (b/a) * (fundo.w-this.rad-this.x) / this.spd)
             this.setCoord(fundo.w-this.rad, undefined);
 
         } else if(this.upWall(b/c)) {
@@ -478,7 +526,7 @@ function buildProj(elem, type, diam, origin, spd) {
         fundo.removeChild(this);    
     }
 
-    elem.spread = async function(xf, yf) {
+    elem.spread = async function(xf = this.randoPos(this.rad*2.5)[0], yf = this.randoPos(this.rad*2.5)[1]) {
         let a, b, c;
 
         a = xf - this.x;
@@ -521,17 +569,17 @@ enmy.shoot = function() {
 
     fundo.appendChild(shot);
 
-    shot.launch(p1.x, p1.y);
+    shot.launch();
 }
 
-enmy.shootSpread = function(xf = this.randoPos(this.rad*2.5)[0], yf = this.randoPos(this.rad*2.5)[1]) {
+enmy.shootSpread = function() {
     let spreadShot = document.createElement('div');
     
     buildProj(spreadShot, 'spreadShot', this.diam/1.75, this, fundo.h *0.014);
 
     fundo.appendChild(spreadShot);
 
-    spreadShot.spread(xf, yf);
+    spreadShot.spread();
 }
 
 enmy.move = async function(xf = this.randoPos()[0], yf = this.randoPos()[1]) {
@@ -539,7 +587,7 @@ enmy.move = async function(xf = this.randoPos()[0], yf = this.randoPos()[1]) {
 
     let b = yf - this.y;
 
-    let c = Math.sqrt(a ** 2 + b ** 2);
+    let c = Math.sqrt(a**2 + b**2);
 
     for (let count = 0; count != Math.floor(c / this.spd); count++) {
         if (count % 20 == 0) {
@@ -558,10 +606,10 @@ enmy.move = async function(xf = this.randoPos()[0], yf = this.randoPos()[1]) {
 function buildExpl(elem, type, diam, origin, spd) {
     build(elem, type, diam, origin.x, origin.y, spd);
 
+    elem.style.opacity = '1';
+
     elem.activate = async function() {
         this.classList.add('pulsing');
-
-        this.style.opacity = '1';
     
         fundo.appendChild(this);    
     }
@@ -577,10 +625,10 @@ function buildExpl(elem, type, diam, origin, spd) {
     
         for (let count = 0; count < duration; count++) {
             this.changeSize(6*ogDiam/duration);
-            this.changeCoord(0, 0);
             this.style.opacity = parseFloat(this.style.opacity) - 0.8/duration + '';
     
             collision(this);
+
             await delay(1000/fps);
         }
     
@@ -613,20 +661,26 @@ enmy.deployBomb = async function() {
 function buildShadow(elem, type, origin, spd) {
     build(elem, type, origin.diam, origin.x, origin.y, spd);
 
-    elem.move = async function(xf, yf, spdMod = 1, coll = false) {
-        this.spd *= spdMod;
-
+    elem.move = async function(xf, yf, coll = false) {
         let a = xf - this.x;
     
         let b = yf - this.y;
     
-        let c = Math.sqrt(a ** 2 + b ** 2);
+        let c = Math.sqrt(a**2 + b**2);
+
+        if(!coll) {
+            this.style.opacity = '0.25';
+            this.spd = enmy.spd * 4;
+        } else {
+            this.style.opacity = '0.75';
+            this.spd = enmy.spd * 12;
+        }
     
         for (let count = 0; count != Math.floor(c / this.spd); count++) {
             this.changeCoord((a/c), (b/c))
     
             if(coll) {
-                collision(elem);
+                collision(this);
             }
     
             await delay(1000/fps);
@@ -635,9 +689,11 @@ function buildShadow(elem, type, origin, spd) {
         this.setCoord(xf, yf);
     }
 
-    elem.trackMove = async function(spdMod = 1) {
-        this.spd *= spdMod;
-        let a, b, c, count;
+    elem.trackMove = async function() {
+        this.style.opacity = '0.25';
+        this.spd = enmy.spd * 4;
+
+        let a, b, c, count, ir = true;
 
         function setDirections() {        
             a = origin.x - elem.x;
@@ -651,17 +707,17 @@ function buildShadow(elem, type, origin, spd) {
 
         setDirections();
         
-        while(1) {
-            if(count == Math.floor(c/this.spd)) {
-                this.setCoord(origin.x, origin.y);
-                await delay(1000/fps);
-                continue;
-            }
-    
+        while(ir) {
             this.changeCoord((a/c), (b/c));
             count++;
         
             setDirections();
+
+            if(count == Math.floor(c/this.spd)) {
+                this.setCoord(origin.x, origin.y);
+                await delay(1000/fps);
+                ir = false;
+            }
 
             await delay(1000/fps);
         }
@@ -707,27 +763,24 @@ function buildShadow(elem, type, origin, spd) {
     
         await delay(50);
 
-        this.style.opacity = '0.25';
         await this.move(x0, y0);
 
-        let graph = document.createElement('div');
+        let alerta = document.createElement('div');
     
-        buildGraph(graph, 'graph', this.diam, 0, this.x, this.y, this.spd * 2);
+        buildAlerta(alerta, 'alerta', this, 0, this.spd * 2);
 
         await delay(100);
     
-        await graph.activate(x1, y1);
-
-        await delay(1500);
-    
-        this.style.opacity = '0.75';
-        await this.move(x1, y1, 3, true);
-
-        await graph.deactivate();
+        await alerta.activate(x1, y1);
 
         await delay(1000);
     
-        this.style.opacity = '0.25';
+        await this.move(x1, y1, true);
+
+        await alerta.deactivate();
+
+        await delay(500);
+    
         await this.trackMove(1/3);    
     }
 }
@@ -799,12 +852,12 @@ function buildRect(elem, type, size, ang, x, y, spd) {
     }
 }
 
-function buildGraph(elem, type, w, h, ang, x, y, spd) {
-    buildRect(elem, type, w, h, ang, x, y, spd);
+function buildAlerta(elem, type, origin, ang, spd) {
+    buildRect(elem, type, origin.diam, ang, origin.x, origin.y, spd);
+
+    elem.style.opacity = '0.15';
 
     elem.activate = async function(x1, y1) {
-        this.style.opacity = '0.15';
-
         this.classList.toggle('flash');
 
         let a = x1 - this.x;
@@ -835,36 +888,36 @@ function buildGraph(elem, type, w, h, ang, x, y, spd) {
 }
 
 enmy.jutsuAttack = async function() {
-    await this.move(fundo.w / 2, fundo.h / 2);
+    await this.move(fundo.w/2, fundo.h/2);
 
     let shadow = [];
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 6; i++) {
         shadow[i] = document.createElement('div');
         buildShadow(shadow[i], 'shadow', this, this.spd*4);
         fundo.appendChild(shadow[i]);
     }
 
-    for (let i = 0; i < 4; i++) {
-        shadow[i].lunge(i);
+    for (let i = 0; i < 6; i++) {
+        shadow[i].lunge(i%4);
     }
 
     this.desaparecer(50);
 
     await delay(200);
 
-    while(shadow[0].x !== this.x || shadow[1].x !== this.x || shadow[2].x !== this.x || shadow[3].x !== this.x) {
+    while(shadow[0].x !== this.x || shadow[1].x !== this.x || shadow[2].x !== this.x || shadow[3].x !== this.x || shadow[4].x !== this.x || shadow[5].x !== this.x) {
         await delay(1000/120);
     }
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 6; i++) {
         fundo.removeChild(shadow[i]);
     }
 
     this.desaparecer(1);
 }
 
-enmy.lol = async function() {
+enmy.shade = async function() {
     let shadow = document.createElement('div');
     buildShadow(shadow, 'shadow', this, this.spd*4);
     fundo.appendChild(shadow);
@@ -874,7 +927,7 @@ enmy.lol = async function() {
     fundo.removeChild(shadow);
 }
 
-
+/*
 async function formWeapon() {
     let weapon, scale, rotate;
     weapon = document.createElement('div');
@@ -934,7 +987,6 @@ async function formWeapon() {
 
     console.log(scale)
     console.log(rotate)
-    /*
     42.6319*4.5
 
     191.84355
@@ -956,36 +1008,21 @@ async function formWeapon() {
     await delay(200);
 
     fundo.removeChild(weapon);
-    */
 }
-
-async function bigText(texto, time = 0) {
-    let text = document.createElement('div');
-    text.classList.add('bigText')
-    text.innerHTML = texto;
-    text.style.width = fundo.w + 'px';
-    text.style.height = fundo.h + 'px';
-    text.style.left = fundo.w/2 - parseFloat(text.style.width)/2 + 'px';
-    text.style.top = fundo.h/2 - parseFloat(text.style.height)/2 + 'px';
-    text.style.lineHeight = text.style.height;
-    text.style.fontSize = parseFloat(text.style.height)/2 + 'px';
-    fundo.appendChild(text);
-
-    if (time) {
-        await delay(time);
-        fundo.removeChild(text);
-    }
-}
-/*
-async function startGame() {
-    await bigText('3', 1000);
-    await bigText('2', 1000);
-    await bigText('1', 1000);
-}
-
+*/
+let thud = new Audio('thud.mp3');
 let orbCount = 0;
+if(!window.localStorage.getItem('vitorias')) {
+    window.localStorage.setItem('vitorias', 0);
+}
+if(!window.localStorage.getItem('derrotas')) {
+    window.localStorage.setItem('derrotas', 0);
+}
+
+let won = window.localStorage.getItem('vitorias'), defeat = window.localStorage.getItem('derrotas');
+
 async function createOrbs() {
-    let coords = randoPos();
+    let coords = p1.randoPos();
     let orb = document.createElement('div');
     orb.classList.add('orb');
     orb.style.left = coords[0] + 'px';
@@ -997,7 +1034,7 @@ async function createOrbs() {
     fundo.appendChild(orb);
     orbCount++;
 
-    while (!orb.classList.contains('defeated')) {
+    while (!p1.classList.contains('defeated') && !p1.classList.contains('won')) {
         let x, y, z, rp1, rOrb;
  
         rp1 = parseFloat(p1.style.width) / 2;
@@ -1009,35 +1046,135 @@ async function createOrbs() {
         z = Math.sqrt(x**2 + y**2);
        
         if (z < rp1+rOrb) {
-            orb.classList.add('defeated');
-            orbCount--;
-            await delay(300);
-            fundo.removeChild(orb);
+            break;
         }
 
         await delay(1000/fps);
     }
+
+    orb.classList.add('defeated');
+    orbCount--;
+    await delay(300);
+    fundo.removeChild(orb);
 }
 
-startGame();
+async function bigText(text, texto) {
+    text.classList.add('bigText');
+    text.innerHTML = texto;
+    text.style.width = fundo.w + 'px';
+    text.style.height = fundo.h/2 + 'px';
+    text.style.left = '0';
+    text.style.top = '0';
+    text.style.lineHeight = text.style.height;
+    text.style.fontSize = text.style.height;
+    fundo.appendChild(text);
+}
 
-async function doGame() {
+async function bigText2(texto, time = 0) {
+    let text = document.createElement('div');
+    text.classList.add('bigText2');
+    text.innerHTML = texto;
+    text.style.width = fundo.w + 'px';
+    text.style.height = fundo.h + 'px';
+    text.style.left = '0';
+    text.style.top = '0';
+    text.style.lineHeight = text.style.height;
+    text.style.fontSize = parseFloat(text.style.height)/1.5 + 'px';
+    fundo.appendChild(text);
+
+    if (time) {
+        await delay(time);
+        fundo.removeChild(text);
+    }
+}
+
+async function stats(text) {
+    text.classList.add('stats');
+    text.innerHTML = `Vitórias: ${window.localStorage.getItem('vitorias')}<br>Derrotas: ${window.localStorage.getItem('derrotas')}`;
+    text.style.width = fundo.w/4 + 'px';
+    text.style.height = fundo.h/4 + 'px';
+    text.style.left = fundo.h/40 + 'px';
+    text.style.top = fundo.h/40 + 'px';
+    text.style.lineHeight = parseFloat(text.style.height)/4.5 + 'px';
+    text.style.fontSize = parseFloat(text.style.height)/4.5 + 'px';
+    fundo.appendChild(text);
+}
+
+function criarBotao(botao, texto) {
+    botao.classList.add('botaoJogo');
+    botao.innerHTML = texto;
+    botao.style.width = fundo.w/4 + 'px';
+    botao.style.height = fundo.h/3 + 'px';
+    botao.style.left = fundo.w/2 - parseFloat(botao.style.width)/2 + 'px';
+    botao.style.top = fundo.h * (3/4) - parseFloat(botao.style.height)/2 + 'px';
+    botao.style.lineHeight = botao.style.height;
+    botao.style.fontSize = parseFloat(botao.style.height)/2.5 + 'px';
+    botao.style.borderRadius = parseFloat(botao.style.height)/4 + 'px';
+
+    fundo.appendChild(botao);
+}
+
+async function iniciar() {
+    if(p1.classList.contains('defeated')) {
+        p1.classList.remove('defeated');
+    }
+
+    if(enmy.classList.contains('defeated1')) {
+        enmy.classList.remove('defeated1');
+    }
+
+    if(p1.classList.contains('won')) {
+        p1.classList.remove('won');
+    }
+
+    let a, b, c, a1, b1, c1;
+
+    a = fundo.w * 0.5 - enmy.x;
+    b = fundo.h / 3 - enmy.y;
+    c = Math.sqrt(a**2 + b**2);
+
+    a1 = fundo.w * 0.5 - p1.x;
+    b1 = fundo.h / 1.5 - p1.y;
+    c1 = Math.sqrt(a1**2 + b1**2);
+
+    for (let count = 0; count != Math.floor(c / enmy.spd); count++) {
+        enmy.changeCoord((a/c), (b/c));
+
+        await delay(1000 / fps);
+    }
+
+    for (let count = 0; count != Math.floor(c1 / p1.spd); count++) {
+        p1.changeCoord((a1/c1), (b1/c1));
+
+        await delay(1000 / fps);
+    }
+
+    await delay(1000);
+
+    await bigText2('1', 1000);
     createOrbs();
-    await delay(500);
     createOrbs();
-    await delay(500);
+    await bigText2('2', 1000);
     createOrbs();
-    await delay(500);
     createOrbs();
-    await delay(500);
+    await bigText2('3', 1000);
     createOrbs();
-    await delay(500);
     createOrbs();
-    await delay(1500);
+
+    p1.moving.up = 0;
+    p1.moving.right = 0;
+    p1.moving.down = 0;
+    p1.moving.left = 0;
+    p1.moving.track = 0;
+
+    await delay(1000);
+
     while (!p1.classList.contains('defeated') && !p1.classList.contains('won')) {
-        switch (Math.floor(Math.random() * 3)) {
+        switch (Math.floor(Math.random() * 5)) {
             case 0:
-                await moveThere();
+                await enmy.shootSpread();
+                await enmy.move();
+                await enmy.shootSpread();
                 if (orbCount == 0) {
                     p1.classList.add('won');
                     break;
@@ -1046,16 +1183,18 @@ async function doGame() {
                 break;
     
             case 1:
-                deployBomb();
-                await delay(200);
-                deployBomb();
-                await delay(200);
-                deployBomb();
-                await delay(200);
-                deployBomb();
-                await delay(200);
-                deployBomb();
-                await delay(200);
+                enmy.deployBomb();
+                await delay(250);
+                enmy.deployBomb();
+                await delay(250);
+                enmy.deployBomb();
+                await delay(250);
+                enmy.deployBomb();
+                await delay(250);
+                enmy.deployBomb();
+                await delay(250);
+                enmy.deployBomb();
+                await delay(250);
                 if (orbCount == 0) {
                     p1.classList.add('won');
                     break;
@@ -1064,14 +1203,46 @@ async function doGame() {
                 break;
             
             case 2:
-                await jutsuAttack();
+                await enmy.jutsuAttack();
                 if (orbCount == 0) {
                     p1.classList.add('won');
                     break;
                 }
                 createOrbs();
                 break;
+
+            case 3:
+                enmy.shade();
+                await enmy.move();
+                await delay(200);
+                await enmy.move();
+                if (orbCount == 0) {
+                    p1.classList.add('won');
+                    break;
+                }
+                createOrbs();
+                break;    
     
+            case 4:
+                await enmy.shootSpread();
+                await delay(250);
+                await enmy.shootSpread();
+                await delay(250);
+                await enmy.shootSpread();
+                await delay(250);
+                await enmy.shootSpread();
+                await delay(250);
+                await enmy.shootSpread();
+                await delay(250);
+                await enmy.shootSpread();
+                await delay(250);
+                if (orbCount == 0) {
+                    p1.classList.add('won');
+                    break;
+                }
+                createOrbs();
+                break;    
+            
             default:
                 break;
         }
@@ -1080,15 +1251,47 @@ async function doGame() {
     }
 
     if(p1.classList.contains('defeated')) {
-        bigText('Lost');
-        fundo.removeChild(p1);
+        enmy.classList.add('defeated1');
+        defeat++;
+        window.localStorage.setItem('derrotas', defeat);
+        await delay(500);
+        telaInicial('Lost', '🔁');
     } else if(p1.classList.contains('won')) {
-        enmy.classList.add('defeated');
-        await delay(300);
-        fundo.removeChild(enmy);
-        bigText('Won!');
+        enmy.classList.add('defeated1');
+        p1.classList.add('defeated');
+        won++;
+        window.localStorage.setItem('vitorias', won);
+        await delay(500);
+        telaInicial('Won', '🔁');
     }
 }
 
-doGame();
-*/
+function telaInicial(texto, textoBotao) {
+    let textoInicial = document.createElement('div');
+    let botaoInicial = document.createElement('button');
+    let status = document.createElement('div');
+
+    bigText(textoInicial, texto);
+    criarBotao(botaoInicial, textoBotao);
+    stats(status);
+
+    botaoInicial.addEventListener('click', () => {
+        fundo.removeChild(textoInicial);
+        fundo.removeChild(botaoInicial);
+        fundo.removeChild(status);
+    });
+
+    botaoInicial.addEventListener('click', iniciar);
+
+    p1.moving.up = 1;
+    p1.moving.right = 1;
+    p1.moving.down = 1;
+    p1.moving.left = 1;
+    p1.moving.track = 1;
+}
+
+window.onload = function() {
+    fundo.appendChild(p1);
+    fundo.appendChild(enmy);
+    telaInicial('Jogo', 'Start');
+}

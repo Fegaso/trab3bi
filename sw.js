@@ -29,6 +29,3 @@ async function cachedResource (req) {
   }
   return fetch(req);
 }
-
-
-
